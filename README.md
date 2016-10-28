@@ -5,4 +5,4 @@ Simple Python functions to compute Allan variance and estimate noise parameters 
 
 *Dependencies*: numpy and scipy.
 
-*Examples*: see [this]() notebook.
+*Examples*: see [this](https://github.com/nmayorov/allan-variance/blob/master/example.ipynb) notebook.
