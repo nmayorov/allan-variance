@@ -1,4 +1,4 @@
-# Author Nikolay Mayorov <nikolay.mayorov@zoho.com>
+# Author: Nikolay Mayorov <nikolay.mayorov@zoho.com>
 
 
 from __future__ import division
@@ -6,17 +6,8 @@ import numpy as np
 from scipy.optimize import nnls
 
 
-def _compute_av(X, cluster_sizes):
-    avar = np.empty(cluster_sizes.shape + X.shape[1:])
-    for i, k in enumerate(cluster_sizes):
-        c = X[2*k:] - 2 * X[k:-k] + X[:-2*k]
-        avar[i] = np.mean(c**2, axis=0) / k**2
-
-    return avar
-
-
 def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
-                   n_clusters=100, n_jobs=1):
+                   n_clusters=100):
     """Compute Allan variance (AV).
     
     Consider an underlying measurement y(t). Our sensors output integrals of
