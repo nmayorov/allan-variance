@@ -60,7 +60,7 @@ def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
     ----------
     .. [1] https://en.wikipedia.org/wiki/Allan_variance
     """
-    if input_mode not in ("increment", "mean"):
+    if input_mode.lower() not in ("increment", "mean"):
         raise Exception("input_mode is incorrect")
     x = np.asarray(x, dtype=float)
     n = x.shape[0]
@@ -76,12 +76,12 @@ def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
     cluster_sizes = np.unique(np.round(cluster_sizes)).astype(np.int64)
 
     avar = np.empty(cluster_sizes.shape + X.shape[1:])
-    if input_mode == "increment":
+    if input_mode.lower() == "increment":
         for i, k in enumerate(cluster_sizes):
             c = X[2*k:] - 2 * X[k:-k] + X[:-2*k]
             avar[i] = np.mean(c**2, axis=0) / k**2
         avar *= 0.5 / dt**2
-    elif input_mode == "mean":
+    elif input_mode.lower() == "mean":
         for i, k in enumerate(cluster_sizes):
             c = X[k:-k] - X[:-2*k]
             avar[i] = np.mean(c**2, axis=0) / k**2
