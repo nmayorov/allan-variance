@@ -73,7 +73,7 @@ def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
     log_max = np.log2((n - min_cluster_count) // 2)
 
     cluster_sizes = np.logspace(log_min, log_max, n_clusters, base=2)
-    cluster_sizes = np.unique(np.round(cluster_sizes)).astype(int)
+    cluster_sizes = np.unique(np.round(cluster_sizes)).astype(np.int64)
 
     avar = np.empty(cluster_sizes.shape + X.shape[1:])
     if input_mode == "increment":
