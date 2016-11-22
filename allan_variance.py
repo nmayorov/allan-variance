@@ -7,25 +7,25 @@ from scipy.optimize import nnls
 
 
 def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
-                   n_clusters=100):
-    """Compute Allan variance (AV).
-    
+                   n_clusters=100, input_mode="increment"):
+    """Compute Allan variance (AVAR).
+
     Consider an underlying measurement y(t). Our sensors output integrals of
     y(t) over successive time intervals of length dt. These measurements
     x(k * dt) form the input to this function.
 
-    Allan variance is defined for different averaging times tau = m * dt as 
+    Allan variance is defined for different averaging times tau = m * dt as
     follows::
 
-        AV(tau) = 1/2 * <(Y(k + m) - Y(k))>,
+        AVAR(tau) = 1/2 * <(Y(k + m) - Y(k))>,
 
-    where Y(j) is the time average value of y(t) over [k * dt, (k + m) * dt] 
+    where Y(j) is the time average value of y(t) over [k * dt, (k + m) * dt]
     (call it a cluster), and < ... > means averaging over different clusters.
-    If we define X(j) being an integral of x(s) from 0 to dt * j, 
-    we can rewrite the AV as  follows::
+    If we define X(j) being an integral of x(s) from 0 to dt * j,
+    we can rewrite the AVAR as  follows::
 
-        AV(tau) = 1/(2 * tau**2) * <X(k + 2 * m) - 2 * X(k + m) + X(k)>
-    
+        AVAR(tau) = 1/(2 * tau**2) * <X(k + 2 * m) - 2 * X(k + m) + X(k)>
+
     We implement < ... > by averaging over different clusters of a given sample
     with overlapping, and X(j) is readily available from x.
 
@@ -37,11 +37,11 @@ def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
     dt : float, optional
         Sampling period. Default is 1.
     min_cluster_size : int, optional
-        Minimum size of a cluster to use. Determines a lower bound on the 
+        Minimum size of a cluster to use. Determines a lower bound on the
         averaging time as ``dt * min_cluster_size``. Default is 1.
     min_cluster_count : int or 'auto', optional
         Minimum number of clusters required to compute the average. Determines
-        an upper bound of the averaging time as 
+        an upper bound of the averaging time as
         ``dt * (n - min_cluster_count) // 2``. If 'auto' (default) it is taken
         to be ``min(1000, n - 2)``
     n_clusters : int, optional
@@ -53,10 +53,19 @@ def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
     tau : ndarray
         Averaging times for which Allan variance was computed, 1-d array.
     avar : ndarray
-        Values of AV. The 0-th dimension is the same as for `tau`. The trailing
-        dimensions match ones for `x`.
+        Values of AVAR. The 0-th dimension is the same as for `tau`. The
+        trailing dimensions match ones for `x`.
+
+    References
+    ----------
+    .. [1] https://en.wikipedia.org/wiki/Allan_variance
     """
-    x = np.asarray(x, dtype=float)
+    if input_mode == "increment":
+        x = np.asarray(x, dtype=float)
+    elif input_mode == "mean":
+        x = np.asarray(x, dtype=float) * dt
+    else:
+        raise Exception("input_mode is incorrect")
     n = x.shape[0]
     X = np.cumsum(x, axis=0)
 
@@ -120,3 +129,23 @@ def params_from_avar(tau, avar):
     prediction = A.dot(x) * avar
 
     return np.sqrt(x), prediction
+
+
+def allan_deviation(avar):
+    """Compute Allan deviation (ADEV).
+
+    Parameters
+    ----------
+    avar : ndarray, shape (n, ...)
+        Values of Allan variance (AVAR).
+
+    Returns
+    -------
+    adev : ndarray, shape (n, ...)
+        Values of ADEV. The dimensions match ones for `avar`.
+
+    References
+    ----------
+    .. [1] https://en.wikipedia.org/wiki/Allan_variance
+    """
+    return np.sqrt(avar)
