@@ -60,12 +60,9 @@ def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
     ----------
     .. [1] https://en.wikipedia.org/wiki/Allan_variance
     """
-    if input_mode == "increment":
-        x = np.asarray(x, dtype=float)
-    elif input_mode == "mean":
-        x = np.asarray(x, dtype=float) * dt
-    else:
+    if input_mode not in ("increment", "mean"):
         raise Exception("input_mode is incorrect")
+    x = np.asarray(x, dtype=float)
     n = x.shape[0]
     X = np.cumsum(x, axis=0)
 
@@ -79,11 +76,16 @@ def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
     cluster_sizes = np.unique(np.round(cluster_sizes)).astype(int)
 
     avar = np.empty(cluster_sizes.shape + X.shape[1:])
-    for i, k in enumerate(cluster_sizes):
-        c = X[2*k:] - 2 * X[k:-k] + X[:-2*k]
-        avar[i] = np.mean(c**2, axis=0) / k**2
-
-    avar *= 0.5 / dt**2
+    if input_mode == "increment":
+        for i, k in enumerate(cluster_sizes):
+            c = X[2*k:] - 2 * X[k:-k] + X[:-2*k]
+            avar[i] = np.mean(c**2, axis=0) / k**2
+        avar *= 0.5 / dt**2
+    elif input_mode == "mean":
+        for i, k in enumerate(cluster_sizes):
+            c = X[k:-k] - X[:-2*k]
+            avar[i] = np.mean(c**2, axis=0) / k**2
+        avar *= 0.5
 
     return cluster_sizes * dt, avar
 
