@@ -66,8 +66,9 @@ def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
     ----------
     .. [1] https://en.wikipedia.org/wiki/Allan_variance
     """
-    if input_type not in ("increment", "mean"):
-        raise Exception("input_type is incorrect")
+    if input_type not in ('increment', 'mean'):
+        raise ValueError("`input_type` must be either 'increment' or 'mean'.")
+
     x = np.asarray(x, dtype=float)
     n = x.shape[0]
     X = np.cumsum(x, axis=0)
@@ -86,9 +87,9 @@ def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
         c = X[2*k:] - 2 * X[k:-k] + X[:-2*k]
         avar[i] = np.mean(c**2, axis=0) / k**2
 
-    if input_type == "increment":
+    if input_type == 'increment':
         avar *= 0.5 / dt**2
-    elif input_type == "mean":
+    elif input_type == 'mean':
         avar *= 0.5
 
     return cluster_sizes * dt, avar
