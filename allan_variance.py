@@ -1,7 +1,7 @@
 # Author: Nikolay Mayorov <nikolay.mayorov@zoho.com>
 
-
 from __future__ import division
+from collections import OrderedDict
 import numpy as np
 from scipy.optimize import nnls
 
@@ -95,7 +95,7 @@ def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
     return cluster_sizes * dt, avar
 
 
-def params_from_avar(tau, avar, output_type="ndarray"):
+def params_from_avar(tau, avar, output_type='array'):
     """Estimate noise parameters from Allan variance.
 
     The parameters being estimated are typical for inertial sensors:
@@ -113,21 +113,23 @@ def params_from_avar(tau, avar, output_type="ndarray"):
         Values of averaging time.
     avar : ndarray, shape (n,)
         Values of Allan variance corresponding to `tau`.
-    output_type : "ndarray" or "dict". Default "ndarray"
-        Type of ``params`` on return
+    output_type : 'array' or 'dict', optional
+        How to return the computed parameters. If 'array' (default), then
+        ndarray is returned. If 'dict', then OrderedDict is returned. See
+        Returns section for more details.
 
     Returns
     -------
-    params : ndarray, shape (5,) or dict
-        Estimated parameters, ordered as quantization, additive white,
-        flicker, random walk, linear ramp (``ndarray`` type) or ``dict`` with
-        the keys "quantization", "additive_white", "flicker", "random_walk",
-        "linear_ramp".
+    params : ndarray, shape (5,) or OrderedDict
+        Either ndarray with estimated parameters, ordered as quantization,
+        additive white, flicker, random walk, linear ramp. Or OrderedDict with
+        the keys 'quantization', 'white', 'flicker', 'walk', 'ramp' and the
+        estimated parameters as the values.
     prediction : ndarray, shape (n,)
         Predicted values of allan variance from the model.
     """
-    if output_type not in ("ndarray", "dict"):
-        raise Exception("output_type is incorrect")
+    if output_type not in ('array', 'dict'):
+        raise ValueError("`output_type` must be either 'array' or 'dict'.")
 
     n = tau.shape[0]
     A = np.empty((n, 5))
@@ -144,12 +146,7 @@ def params_from_avar(tau, avar, output_type="ndarray"):
     params = np.sqrt(x)
 
     if output_type == 'dict':
-        (quantization, additive_white, flicker, random_walk,
-         linear_ramp) = params
-        params = dict(quantization=quantization,
-                      additive_white=additive_white,
-                      flicker=flicker,
-                      random_walk=random_walk,
-                      linear_ramp=linear_ramp)
+        params = OrderedDict(
+            zip(('quantization', 'white', 'flicker', 'walk', 'ramp'), params))
 
     return params, prediction
