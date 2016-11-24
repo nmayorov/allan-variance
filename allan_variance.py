@@ -126,7 +126,7 @@ def params_from_avar(tau, avar, output_type='array'):
         the keys 'quantization', 'white', 'flicker', 'walk', 'ramp' and the
         estimated parameters as the values.
     prediction : ndarray, shape (n,)
-        Predicted values of allan variance from the model.
+        Predicted values of Allan variance using the estimated parameters.
     """
     if output_type not in ('array', 'dict'):
         raise ValueError("`output_type` must be either 'array' or 'dict'.")
