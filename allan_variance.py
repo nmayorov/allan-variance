@@ -103,7 +103,7 @@ def params_from_avar(tau, avar, output_type='array'):
     instability), random walk and linear ramp (this is a deterministic effect).
 
     The parameters are estimated using linear least squares with weights
-    inversly proportional to the values of Allan variance. That is the sum of
+    inversely proportional to the values of Allan variance. That is the sum of
     relative error is minimized. This approach is approximately equivalent of
     doing estimation in the log-log scale.
 
