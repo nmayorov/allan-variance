@@ -85,7 +85,7 @@ def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
     avar = np.empty(cluster_sizes.shape + X.shape[1:])
     for i, k in enumerate(cluster_sizes):
         c = X[2*k:] - 2 * X[k:-k] + X[:-2*k]
-        avar[i] = np.mean(c**2, axis=0) / k**2
+        avar[i] = np.mean(c**2, axis=0) / k / k
 
     if input_type == 'increment':
         avar *= 0.5 / dt**2
