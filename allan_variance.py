@@ -47,8 +47,12 @@ def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
     n_clusters : int, optional
         Number of clusters to compute Allan variance for. The averaging times
         will be spread approximately uniform in a log scale. Default is 100.
-    input_type : "increment" or "mean". Default "increment"
-        Way to interpret the input data (``x``)
+    input_type : 'increment' or 'mean', optional
+        How to interpret the input data. If 'increment' (default), then
+        `x` is assumed to contain integral increments over successive time
+        intervals (as described above). If 'mean', then `x` is assumed to
+        contain mean values of y over successive time intervals, i.e.
+        increments divided by `dt`.
 
     Returns
     -------
