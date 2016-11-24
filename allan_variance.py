@@ -7,7 +7,7 @@ from scipy.optimize import nnls
 
 
 def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
-                   n_clusters=100, input_mode="increment"):
+                   n_clusters=100, input_type="increment"):
     """Compute Allan variance (AVAR).
 
     Consider an underlying measurement y(t). Our sensors output integrals of
@@ -60,7 +60,7 @@ def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
     ----------
     .. [1] https://en.wikipedia.org/wiki/Allan_variance
     """
-    if input_mode.lower() not in ("increment", "mean"):
+    if input_type not in ("increment", "mean"):
         raise Exception("input_mode is incorrect")
     x = np.asarray(x, dtype=float)
     n = x.shape[0]
@@ -80,9 +80,9 @@ def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
         c = X[2*k:] - 2 * X[k:-k] + X[:-2*k]
         avar[i] = np.mean(c**2, axis=0) / k**2
 
-    if input_mode.lower() == "increment":
+    if input_type == "increment":
         avar *= 0.5 / dt**2
-    elif input_mode.lower() == "mean":
+    elif input_type == "mean":
         avar *= 0.5
 
     return cluster_sizes * dt, avar
@@ -129,23 +129,3 @@ def params_from_avar(tau, avar):
     prediction = A.dot(x) * avar
 
     return np.sqrt(x), prediction
-
-
-def allan_deviation(avar):
-    """Compute Allan deviation (ADEV).
-
-    Parameters
-    ----------
-    avar : ndarray, shape (n, ...)
-        Values of Allan variance (AVAR).
-
-    Returns
-    -------
-    adev : ndarray, shape (n, ...)
-        Values of ADEV. The dimensions match ones for `avar`.
-
-    References
-    ----------
-    .. [1] https://en.wikipedia.org/wiki/Allan_variance
-    """
-    return np.sqrt(avar)
