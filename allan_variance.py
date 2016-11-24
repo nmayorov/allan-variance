@@ -61,7 +61,7 @@ def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
     .. [1] https://en.wikipedia.org/wiki/Allan_variance
     """
     if input_type not in ("increment", "mean"):
-        raise Exception("input_mode is incorrect")
+        raise Exception("input_type is incorrect")
     x = np.asarray(x, dtype=float)
     n = x.shape[0]
     X = np.cumsum(x, axis=0)
@@ -88,7 +88,7 @@ def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
     return cluster_sizes * dt, avar
 
 
-def params_from_avar(tau, avar):
+def params_from_avar(tau, avar, output_type="ndarray"):
     """Estimate noise parameters from Allan variance.
 
     The parameters being estimated are typical for inertial sensors:
@@ -115,6 +115,9 @@ def params_from_avar(tau, avar):
     prediction : ndarray, shape (n,)
         Predicted values of allan variance from the model.
     """
+    if output_type not in ("ndarray", "dict"):
+        raise Exception("output_type is incorrect")
+
     n = tau.shape[0]
     A = np.empty((n, 5))
     A[:, 0] = 3 / tau**2
@@ -127,5 +130,15 @@ def params_from_avar(tau, avar):
 
     x = nnls(A, b)[0]
     prediction = A.dot(x) * avar
+    params = np.sqrt(x)
 
-    return np.sqrt(x), prediction
+    if output_type == 'dict':
+        (quantization, additive_white, flicker, random_walk,
+         linear_ramp) = params
+        params = dict(quantization=quantization,
+                      additive_white=additive_white,
+                      flicker=flicker,
+                      random_walk=random_walk,
+                      linear_ramp=linear_ramp)
+
+    return params, prediction
