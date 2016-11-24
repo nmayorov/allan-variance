@@ -47,6 +47,8 @@ def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
     n_clusters : int, optional
         Number of clusters to compute Allan variance for. The averaging times
         will be spread approximately uniform in a log scale. Default is 100.
+    input_type : "increment" or "mean". Default "increment"
+        Way to interpret the input data (``x``)
 
     Returns
     -------
@@ -106,12 +108,16 @@ def params_from_avar(tau, avar, output_type="ndarray"):
         Values of averaging time.
     avar : ndarray, shape (n,)
         Values of Allan variance corresponding to `tau`.
+    output_type : "ndarray" or "dict". Default "ndarray"
+        Type of ``params`` on return
 
     Returns
     -------
-    params : ndarray, shape (5,)
+    params : ndarray, shape (5,) or dict
         Estimated parameters, ordered as quantization, additive white,
-        flicker, random walk, linear ramp.
+        flicker, random walk, linear ramp (``ndarray`` type) or ``dict`` with
+        the keys "quantization", "additive_white", "flicker", "random_walk",
+        "linear_ramp".
     prediction : ndarray, shape (n,)
         Predicted values of allan variance from the model.
     """
