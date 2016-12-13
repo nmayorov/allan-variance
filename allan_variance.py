@@ -65,6 +65,8 @@ def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
     References
     ----------
     .. [1] https://en.wikipedia.org/wiki/Allan_variance
+    .. [2] IEEE Standart 952-1997 "IEEE Standard Specification Format Guide and
+        Test Procedure for Single-Axis Interferometric Fiber Optic Gyros", 1998
     """
     if input_type not in ('increment', 'mean'):
         raise ValueError("`input_type` must be either 'increment' or 'mean'.")
@@ -95,7 +97,7 @@ def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
     return cluster_sizes * dt, avar
 
 
-def params_from_avar(tau, avar, output_type='array', empiric=False):
+def params_from_avar(tau, avar, output_type='array', empiric_mode=False):
     """Estimate noise parameters from Allan variance.
 
     The parameters being estimated are typical for inertial sensors:
@@ -117,10 +119,10 @@ def params_from_avar(tau, avar, output_type='array', empiric=False):
         How to return the computed parameters. If 'array' (default), then
         ndarray is returned. If 'dict', then OrderedDict is returned. See
         Returns section for more details.
-    empiric : bool (Default is False)
-        If enabled (True), then if `flicker` is 0, then estimate it with
-        `min(avar)`, but consider the right part of the predicted curve.
-
+    empiric_mode : bool (Default is False)
+        If empiric mode is enabled (True), then if `flicker` is 0, then
+        estimate it with `min(avar)`, but consider the right part of the
+        predicted curve. Should be used carefully.
 
     Returns
     -------
@@ -134,9 +136,8 @@ def params_from_avar(tau, avar, output_type='array', empiric=False):
 
     References
     ----------
-    .. [1] A. J. Zhou, G. Ren, H. J. Zhou, "Test Method of Fiber Optic
-        Gyroscope Based on Allan Variance", Advanced Materials Research,
-        Vols. 311-313, pp. 1357-1360, 2011
+    .. [1] IEEE Standart 952-1997 "IEEE Standard Specification Format Guide and
+        Test Procedure for Single-Axis Interferometric Fiber Optic Gyros", 1998
     """
     if output_type not in ('array', 'dict'):
         raise ValueError("`output_type` must be either 'array' or 'dict'.")
@@ -155,7 +156,7 @@ def params_from_avar(tau, avar, output_type='array', empiric=False):
     # If flicker is not estimated, then let's estimate it as min of avar.
     # Consider the right part of the curve (either rate random walk or rate
     # ramp needs to be estimated)
-    if empiric and x[2] == 0 and (x[3] != 0 or x[4] != 0):
+    if empiric_mode and x[2] == 0 and (x[3] != 0 or x[4] != 0):
         x[2] = np.min(avar)**2.
     prediction = A.dot(x) * avar
     params = np.sqrt(x)
