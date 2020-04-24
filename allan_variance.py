@@ -6,7 +6,24 @@ import numpy as np
 from scipy.optimize import nnls
 
 
-def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
+def _compute_cluster_sizes(n_samples, dt, tau_min, tau_max, n_clusters):
+    if tau_min is None:
+        min_size = 1
+    else:
+        min_size = int(tau_min / dt)
+
+    if tau_max is None:
+        max_size = n_samples // 10
+    else:
+        max_size = int(tau_max / dt)
+
+    result = np.logspace(np.log2(min_size), np.log2(max_size),
+                         num=n_clusters, base=2)
+
+    return np.unique(np.round(result)).astype(int)
+
+
+def allan_variance(x, dt=1, tau_min=None, tau_max=None,
                    n_clusters=100, input_type="increment"):
     """Compute Allan variance (AVAR).
 
@@ -36,14 +53,13 @@ def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
         integral of a signal. Assumed to vary along the 0-th axis.
     dt : float, optional
         Sampling period. Default is 1.
-    min_cluster_size : int, optional
-        Minimum size of a cluster to use. Determines a lower bound on the
-        averaging time as ``dt * min_cluster_size``. Default is 1.
-    min_cluster_count : int or 'auto', optional
-        Minimum number of clusters required to compute the average. Determines
-        an upper bound of the averaging time as
-        ``dt * (n - min_cluster_count) // 2``. If 'auto' (default) it is taken
-        to be ``min(1000, n - 2)``
+    tau_min : float or None, optional
+        Minimum averaging time to use. If None (default), it is assigned equal
+        to `dt`.
+    tau_max : float or None, optional
+        Maximum averaging time to use. If None (default), it is chosen
+        automatically such that to averaging is done over 10 *independent*
+        clusters.
     n_clusters : int, optional
         Number of clusters to compute Allan variance for. The averaging times
         will be spread approximately uniform in a log scale. Default is 100.
@@ -70,17 +86,10 @@ def allan_variance(x, dt=1, min_cluster_size=1, min_cluster_count='auto',
         raise ValueError("`input_type` must be either 'increment' or 'mean'.")
 
     x = np.asarray(x, dtype=float)
-    n = x.shape[0]
     X = np.cumsum(x, axis=0)
 
-    if min_cluster_count == 'auto':
-        min_cluster_count = min(1000, n - 2)
-
-    log_min = np.log2(min_cluster_size)
-    log_max = np.log2((n - min_cluster_count) // 2)
-
-    cluster_sizes = np.logspace(log_min, log_max, n_clusters, base=2)
-    cluster_sizes = np.unique(np.round(cluster_sizes)).astype(np.int64)
+    cluster_sizes = _compute_cluster_sizes(len(x), dt, tau_min, tau_max,
+                                           n_clusters)
 
     avar = np.empty(cluster_sizes.shape + X.shape[1:])
     for i, k in enumerate(cluster_sizes):
