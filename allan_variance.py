@@ -1,8 +1,8 @@
 # Author: Nikolay Mayorov <nikolay.mayorov@zoho.com>
 
 from __future__ import division
-from collections import OrderedDict
 import numpy as np
+import pandas as pd
 from scipy.optimize import nnls
 
 
@@ -104,7 +104,7 @@ def allan_variance(x, dt=1, tau_min=None, tau_max=None,
     return cluster_sizes * dt, avar
 
 
-def params_from_avar(tau, avar, output_type='array'):
+def params_from_avar(tau, avar, effects=None, sensor_names=None):
     """Estimate noise parameters from Allan variance.
 
     The parameters being estimated are typical for inertial sensors:
@@ -120,42 +120,69 @@ def params_from_avar(tau, avar, output_type='array'):
     ----------
     tau : ndarray, shape (n,)
         Values of averaging time.
-    avar : ndarray, shape (n,)
+    avar : ndarray, shape (n,) or (n, m)
         Values of Allan variance corresponding to `tau`.
-    output_type : 'array' or 'dict', optional
-        How to return the computed parameters. If 'array' (default), then
-        ndarray is returned. If 'dict', then OrderedDict is returned. See
-        Returns section for more details.
+    effects : list or None, optional
+        Which effects to estimate. Allowed effects are 'quantization', 'white',
+        'flicker', 'walk', 'ramp'. If None (default), estimate all of the
+        mentioned above effects.
+    sensor_names : list or None, optional
+        How to name sensors in the output. If None (default), use integer
+        values as names.
 
     Returns
     -------
-    params : ndarray, shape (5,) or OrderedDict
-        Either ndarray with estimated parameters, ordered as quantization,
-        additive white, flicker, random walk, linear ramp. Or OrderedDict with
-        the keys 'quantization', 'white', 'flicker', 'walk', 'ramp' and the
-        estimated parameters as the values.
-    prediction : ndarray, shape (n,)
+    params : pandas DataFrame or Series
+        Estimated parameters.
+    prediction : ndarray, shape (n,) or (n, m)
         Predicted values of Allan variance using the estimated parameters.
     """
-    if output_type not in ('array', 'dict'):
-        raise ValueError("`output_type` must be either 'array' or 'dict'.")
+    ALLOWED_EFFECTS = ['quantization', 'white', 'flicker', 'walk', 'ramp']
 
-    n = tau.shape[0]
+    avar = np.asarray(avar)
+    single_series = avar.ndim == 1
+    if single_series:
+        avar = avar[:, None]
+
+    if effects is None:
+        effects = ALLOWED_EFFECTS
+    elif not set(effects) <= set(ALLOWED_EFFECTS):
+        raise ValueError("Unknown effects are passed.")
+
+    n = len(tau)
+
     A = np.empty((n, 5))
     A[:, 0] = 3 / tau**2
     A[:, 1] = 1 / tau
     A[:, 2] = 2 * np.log(2) / np.pi
     A[:, 3] = tau / 3
     A[:, 4] = tau**2 / 2
-    A /= avar[:, np.newaxis]
-    b = np.ones(n)
+    mask = ['quantization' in effects,
+            'white' in effects,
+            'flicker' in effects,
+            'walk' in effects,
+            'ramp' in effects]
 
-    x = nnls(A, b)[0]
-    prediction = A.dot(x) * avar
-    params = np.sqrt(x)
+    A = A[:, mask]
+    effects = np.asarray(ALLOWED_EFFECTS)[mask]
 
-    if output_type == 'dict':
-        params = OrderedDict(
-            zip(('quantization', 'white', 'flicker', 'walk', 'ramp'), params))
+    params = []
+    prediction = []
+
+    for column in range(avar.shape[1]):
+        avar_single = avar[:, column]
+        A_scaled = A / avar_single[:, None]
+        x = nnls(A_scaled, np.ones(n))[0]
+        prediction.append(A_scaled.dot(x) * avar_single)
+        params.append(np.sqrt(x))
+
+    params = np.asarray(params)
+    prediction = np.asarray(prediction).T
+
+    params = pd.DataFrame(params, index=sensor_names, columns=effects)
+
+    if single_series:
+        params = params.iloc[0]
+        prediction = prediction[:, 0]
 
     return params, prediction
