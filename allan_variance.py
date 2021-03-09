@@ -6,9 +6,6 @@ import pandas as pd
 from scipy.optimize import nnls
 
 
-ALLOWED_INPUT_TYPES = ['mean', 'increment', 'integral']
-
-
 def _compute_cluster_sizes(n_samples, dt, tau_min, tau_max, n_clusters):
     if tau_min is None:
         min_size = 1
@@ -94,6 +91,8 @@ def allan_variance(x, dt=1, tau_min=None, tau_max=None,
     ----------
     .. [1] https://en.wikipedia.org/wiki/Allan_variance
     """
+    ALLOWED_INPUT_TYPES = ['mean', 'increment', 'integral']
+
     if input_type not in ALLOWED_INPUT_TYPES:
         raise ValueError("`input_type` must be one of {}."
                          .format(ALLOWED_INPUT_TYPES))
