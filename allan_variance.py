@@ -27,7 +27,7 @@ def _compute_cluster_sizes(n_samples, dt, tau_min, tau_max, n_clusters):
 
 
 def allan_variance(x, dt=1, tau_min=None, tau_max=None,
-                   n_clusters=100, input_type="increment"):
+                   n_clusters=100, input_type='mean'):
     """Compute Allan variance (AVAR).
 
     Consider an underlying measurement y(t). Our sensors output integrals of
