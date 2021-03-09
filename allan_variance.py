@@ -6,6 +6,9 @@ import pandas as pd
 from scipy.optimize import nnls
 
 
+ALLOWED_INPUT_TYPES = ['mean', 'increment', 'integral']
+
+
 def _compute_cluster_sizes(n_samples, dt, tau_min, tau_max, n_clusters):
     if tau_min is None:
         min_size = 1
@@ -63,12 +66,21 @@ def allan_variance(x, dt=1, tau_min=None, tau_max=None,
     n_clusters : int, optional
         Number of clusters to compute Allan variance for. The averaging times
         will be spread approximately uniform in a log scale. Default is 100.
-    input_type : 'increment' or 'mean', optional
-        How to interpret the input data. If 'increment' (default), then
-        `x` is assumed to contain integral increments over successive time
-        intervals (as described above). If 'mean', then `x` is assumed to
-        contain mean values of y over successive time intervals, i.e.
-        increments divided by `dt`.
+    input_type : {'mean', 'increment', 'integral'}, optional
+        How to interpret the input data:
+
+            - 'mean': `x` is assumed to contain mean values of y over
+              successive time intervals.
+            - 'increment': `x` is assumed to contain integral increments over
+              successive time intervals.
+            - 'integral': `x` is assumed to contain cumulative integral of
+              y from the time start.
+
+        Note that 'mean' can be used when passing filtered and sampled value
+        of y. But in this case generally the filtering process affects
+        properties of the underlying signal y and "effective" Allan variance
+        is computed, i.e. you can use obtained parameters when working with
+        the sampled signal.
 
     Returns
     -------
@@ -82,11 +94,15 @@ def allan_variance(x, dt=1, tau_min=None, tau_max=None,
     ----------
     .. [1] https://en.wikipedia.org/wiki/Allan_variance
     """
-    if input_type not in ('increment', 'mean'):
-        raise ValueError("`input_type` must be either 'increment' or 'mean'.")
+    if input_type not in ALLOWED_INPUT_TYPES:
+        raise ValueError("`input_type` must be one of {}."
+                         .format(ALLOWED_INPUT_TYPES))
 
     x = np.asarray(x, dtype=float)
-    X = np.cumsum(x, axis=0)
+    if input_type == 'integral':
+        X = x
+    else:
+        X = np.cumsum(x, axis=0)
 
     cluster_sizes = _compute_cluster_sizes(len(x), dt, tau_min, tau_max,
                                            n_clusters)
@@ -96,10 +112,10 @@ def allan_variance(x, dt=1, tau_min=None, tau_max=None,
         c = X[2*k:] - 2 * X[k:-k] + X[:-2*k]
         avar[i] = np.mean(c**2, axis=0) / k / k
 
-    if input_type == 'increment':
-        avar *= 0.5 / dt**2
-    elif input_type == 'mean':
+    if input_type == 'mean':
         avar *= 0.5
+    else:
+        avar *= 0.5 / dt**2
 
     return cluster_sizes * dt, avar
 
