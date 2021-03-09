@@ -49,8 +49,8 @@ def allan_variance(x, dt=1, tau_min=None, tau_max=None,
     Parameters
     ----------
     x : ndarray, shape (n, ...)
-        Integrating sensor readings, i. e. its cumulative sum gives an
-        integral of a signal. Assumed to vary along the 0-th axis.
+        Sensor readings, interpretation depends on `input_type` argument.
+        Assumed to vary along the 0-th axis.
     dt : float, optional
         Sampling period. Default is 1.
     tau_min : float or None, optional
