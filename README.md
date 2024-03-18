@@ -1,3 +1,5 @@
+![tests status](https://github.com/nmayorov/allan-variance/actions/workflows/build_and_test.yaml/badge.svg)
+
 # allan_variance
 
 Simple Python package to compute Allan variance and estimate noise parameters from it.
