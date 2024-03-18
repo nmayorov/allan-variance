@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "allan-variance"
+description = "Allan variance and noise parameter estimation"
+version = "1.0"
+maintainers = [
+    {name = "Nikolay Mayorov", email = "nikolay.mayorov@zoho.com"},
+]
+keywords = ["Allan Variance", "Estimation", "Noise"]
+license = {file="LICENSE.txt"}
+readme = "README.md"
+dependencies = ["numpy", "scipy", "pandas"]
+classifiers=[
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+]
+
+[project.urls]
+Homepage = "https://github.com/nmayorov/allan-variance"

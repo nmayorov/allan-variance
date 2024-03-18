@@ -1,6 +1,4 @@
-# Author: Nikolay Mayorov <nikolay.mayorov@zoho.com>
-
-from __future__ import division
+"""Allan variance computation and noise parameter estimation."""
 import numpy as np
 import pandas as pd
 from scipy.optimize import nnls
@@ -23,8 +21,8 @@ def _compute_cluster_sizes(n_samples, dt, tau_min, tau_max, n_clusters):
     return np.unique(np.round(result)).astype(int)
 
 
-def allan_variance(x, dt=1, tau_min=None, tau_max=None,
-                   n_clusters=100, input_type='mean'):
+def compute_avar(x, dt=1, tau_min=None, tau_max=None,
+                 n_clusters=100, input_type='mean'):
     """Compute Allan variance (AVAR).
 
     Consider an underlying measurement y(t). Our sensors output integrals of
@@ -119,7 +117,7 @@ def allan_variance(x, dt=1, tau_min=None, tau_max=None,
     return cluster_sizes * dt, avar
 
 
-def params_from_avar(tau, avar, effects=None, sensor_names=None):
+def estimate_parameters(tau, avar, effects=None, sensor_names=None):
     """Estimate noise parameters from Allan variance.
 
     The parameters being estimated are typical for inertial sensors:
