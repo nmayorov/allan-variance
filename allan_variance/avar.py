@@ -129,6 +129,15 @@ def estimate_parameters(tau, avar, effects=None, sensor_names=None):
     relative error is minimized. This approach is approximately equivalent of
     doing estimation in the log-log scale.
 
+    If the variable of the underlying process has a unit U (say deg/s for gyroscopes)
+    then the estimated parameters has the following units:
+
+        - U * s for quantization noise (deg for gyros)
+        - U * s**0.5 for white noise (deg/s**0.5 for gyros)
+        - U for flicker noise (deg/s for gyros)
+        - U / s**0.5 for random walk (deg/s/s**0.5 for gyros)
+        - U / s for ramp (deg/s/s for gyros)
+
     Parameters
     ----------
     tau : ndarray, shape (n,)
